@@ -50,7 +50,8 @@ st.markdown("""
     div.stButton {
         display: flex;
         justify-content: center;
-        margin-top: 25px;
+        margin-top: 15px;
+        width: 100%;
     }
     div.stButton > button:first-child {
         background-color: transparent !important;
@@ -59,9 +60,10 @@ st.markdown("""
         border-radius: 0px !important;
         font-family: 'Josefin Sans', sans-serif !important;
         font-weight: bold !important;
-        letter-spacing: 2px !important;
-        padding: 10px 30px !important;
-        width: 80% !important;
+        letter-spacing: 1px !important; /* Redujimos un poco el espacio para que quepa */
+        padding: 10px 15px !important;
+        width: 100% !important; /* Ahora abarca todo el ancho del lienzo */
+        white-space: nowrap !important; /* Fuerza a que el texto se muestre completo sin puntos suspensivos */
         transition: all 0.3s;
     }
     div.stButton > button:first-child:hover {
