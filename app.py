@@ -159,24 +159,22 @@ with col_izq:
     st.markdown('<div class="custom-title">PROYECTO INTEGRADOR:<br>CICLO DE VIDA DE IA<br>(ETAPAS 1-4)</div>', unsafe_allow_html=True)
     st.markdown('<div class="custom-subtitle">DIBUJA UN NÚMERO. UN MODELO GENERATIVO LIMPIARÁ TU TRAZO Y 4 ARQUITECTURAS DISTINTAS INTENTARÁN PREDECIRLO.</div>', unsafe_allow_html=True)
     
-    # Sub-columnas para las imágenes de los trazos
+   # Sub-columnas para las imágenes de los trazos
     col_img1, col_img2 = st.columns(2)
+    
     with col_img1:
-        st.markdown('<div class="polaroid-box">', unsafe_allow_html=True)
         if procesado and img_28 is not None:
-            # Mostrar invertido de nuevo para que coincida con la estética en pantalla
             st.image(cv2.bitwise_not(img_28), width=150)
         else:
-            st.image(np.ones((150, 150, 3)) * 255, width=150) # Cuadro en blanco por defecto
-        st.markdown('TRAZO ORIGINAL</div>', unsafe_allow_html=True)
+            st.image(np.ones((150, 150, 3)), width=150)
+        st.markdown('<div style="text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; letter-spacing: 1px;">TRAZO ORIGINAL</div>', unsafe_allow_html=True)
         
     with col_img2:
-        st.markdown('<div class="polaroid-box">', unsafe_allow_html=True)
         if procesado and img_limpia_28 is not None:
             st.image(cv2.bitwise_not((img_limpia_28 * 255).astype(np.uint8)), width=150)
         else:
             st.image(np.ones((150, 150, 3)), width=150)
-        st.markdown('TRAZO LIMPIO</div>', unsafe_allow_html=True)
+        st.markdown('<div style="text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; letter-spacing: 1px;">TRAZO LIMPIO</div>', unsafe_allow_html=True)
         
     st.write("") # Espaciador
     
