@@ -5,11 +5,83 @@ import joblib
 from tensorflow.keras.models import load_model
 from streamlit_drawable_canvas import st_canvas
 
-st.set_page_config(page_title="Sistema Inteligente Completo", layout="wide")
-st.title("Proyecto Integrador: Ciclo de Vida de IA (Etapas 1-4)")
-st.write("Dibuja un número. Un modelo generativo limpiará tu trazo y 4 arquitecturas distintas intentarán predecirlo.")
+# 1. Configuración de página ancha para soportar el diseño de dos columnas
+st.set_page_config(page_title="Proyecto Integrador IA", layout="wide")
 
-# 1. Cargar los 5 modelos
+# 2. Inyección masiva de CSS para lograr la estética de la imagen
+st.markdown("""
+    <style>
+    /* Importar fuentes elegantes de Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&family=Marcellus&display=swap');
+    
+    /* Fondo general color sage green */
+    .stApp {
+        background-color: #cbd3c5;
+    }
+    
+    /* Tipografía del título */
+    .custom-title {
+        font-family: 'Marcellus', serif;
+        font-size: 3rem;
+        color: #4a443b;
+        text-align: center;
+        line-height: 1.2;
+        margin-bottom: 20px;
+    }
+    
+    /* Tipografía del subtítulo */
+    .custom-subtitle {
+        font-family: 'Josefin Sans', sans-serif;
+        font-size: 1rem;
+        color: #4a443b;
+        text-align: center;
+        letter-spacing: 2px;
+        margin-bottom: 40px;
+    }
+    
+    /* Cajas tipo Polaroid para las imágenes y resultados */
+    .polaroid-box {
+        background-color: #f4efea;
+        padding: 15px;
+        border: 1px solid #4a443b;
+        text-align: center;
+        font-family: 'Josefin Sans', sans-serif;
+        color: #4a443b;
+        margin-bottom: 15px;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Contenedor del canvas para que combine con el fondo crema */
+    .canvas-container {
+        background-color: #f4efea;
+        padding: 20px;
+        border: 1px solid #4a443b;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* Estilo del botón Procesar */
+    div.stButton > button:first-child {
+        background-color: transparent !important;
+        color: #4a443b !important;
+        border: 1px solid #4a443b !important;
+        border-radius: 0px !important;
+        font-family: 'Josefin Sans', sans-serif !important;
+        letter-spacing: 2px !important;
+        padding: 10px 30px !important;
+        width: 100% !important;
+        margin-top: 15px;
+        transition: all 0.3s;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #4a443b !important;
+        color: #f4efea !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 3. Carga de Modelos
 @st.cache_resource
 def cargar_modelos():
     modelo_lr = joblib.load('modelo_baseline_lr.pkl')
@@ -21,83 +93,102 @@ def cargar_modelos():
 
 modelo_lr, modelo_cnn, modelo_rnn, modelo_tl, autoencoder = cargar_modelos()
 
-# 2. Lienzo de dibujo
-canvas_result = st_canvas(
-    fill_color="black",
-    stroke_width=25,
-    stroke_color="white",
-    background_color="black",
-    width=280,
-    height=280,
-    drawing_mode="freedraw",
-    key="canvas",
-    return_image_data=True
-)
+# 4. Estructura de Columnas (Izquierda 55%, Derecha 45%)
+col_izq, col_espacio, col_der = st.columns([5.5, 0.5, 4.0])
 
-if st.button("Procesar y Predecir"):
-    if canvas_result.image_data is not None:
-        # Preprocesamiento inicial
-        imagen = canvas_result.image_data
-        imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_RGBA2GRAY)
-        img_28 = cv2.resize(imagen_gris, (28, 28), interpolation=cv2.INTER_AREA)
-        
-        # Normalizar para el Autoencoder
-        entrada_ae = img_28.reshape(1, 28, 28, 1) / 255.0
-        
-        # Etapa 4: Reconstrucción Generativa
-        img_limpia_array = autoencoder.predict(entrada_ae, verbose=0)
-        img_limpia_28 = img_limpia_array.reshape(28, 28)
-        
-        # Mostrar comparativa de limpieza
-        st.write("### Reconstrucción del Trazo (Autoencoder)")
-        col_img1, col_img2 = st.columns(2)
-        with col_img1:
-            st.image(img_28, caption="Trazo Original (28x28)", width=150)
-        with col_img2:
-            st.image(img_limpia_28, caption="Trazo Limpio/Reconstruido", width=150)
-        
-        # Inferencia con la imagen LIMPIA
-        entrada_lr = img_limpia_28.reshape(1, -1)
-        pred_lr = modelo_lr.predict(entrada_lr)[0]
-        
-        entrada_cnn = img_limpia_28.reshape(1, 28, 28, 1)
-        pred_cnn = np.argmax(modelo_cnn.predict(entrada_cnn, verbose=0))
-        
-        entrada_rnn = img_limpia_28.reshape(1, 28, 28)
-        pred_rnn = np.argmax(modelo_rnn.predict(entrada_rnn, verbose=0))
-        
-        # Preparar la imagen limpia para Transfer Learning (32x32x3)
-        img_limpia_32 = cv2.resize(img_limpia_28, (32, 32), interpolation=cv2.INTER_AREA)
-        img_limpia_32_rgb = cv2.cvtColor((img_limpia_32 * 255).astype(np.uint8), cv2.COLOR_GRAY2RGB)
-        entrada_tl = (img_limpia_32_rgb.reshape(1, 32, 32, 3) / 127.5) - 1.0
-        pred_tl = np.argmax(modelo_tl.predict(entrada_tl, verbose=0))
-        
-        # Mostrar predicciones
-        st.write("### Resultados de Clasificación")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.info(f"**Clásico (LR):** {pred_lr}")
-        with col2:
-            st.success(f"**Red CNN:** {pred_cnn}")
-        with col3:
-            st.warning(f"**Red RNN:** {pred_rnn}")
-        with col4:
-            st.error(f"**MobileNetV2:** {pred_tl}")
+# Variables para guardar resultados
+pred_lr, pred_cnn, pred_rnn, pred_tl = "-", "-", "-", "-"
+img_28 = None
+img_limpia_28 = None
+procesado = False
+
+with col_der:
+    st.markdown('<div class="canvas-container">', unsafe_allow_html=True)
+    # Canvas adaptado a los colores del diseño (fondo crema, trazo café oscuro)
+    canvas_result = st_canvas(
+        fill_color="#f4efea",
+        stroke_width=25,
+        stroke_color="#4a443b", # Trazo oscuro
+        background_color="#f4efea", # Fondo claro
+        width=350,
+        height=350,
+        drawing_mode="freedraw",
+        key="canvas",
+        return_image_data=True
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.button("PROCESAR Y PREDECIR"):
+        if canvas_result.image_data is not None:
+            # Procesamiento visual
+            imagen = canvas_result.image_data
+            imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_RGBA2GRAY)
             
-    else:
-        st.warning("Por favor, dibuja algo antes de predecir.")
+            # TRUCO CRÍTICO: Invertir colores. El modelo espera fondo negro y trazo blanco.
+            # Como dibujaste en fondo crema con trazo oscuro, invertimos la matriz.
+            imagen_invertida = cv2.bitwise_not(imagen_gris)
+            
+            img_28 = cv2.resize(imagen_invertida, (28, 28), interpolation=cv2.INTER_AREA)
+            
+            # Reconstrucción (Autoencoder)
+            entrada_ae = img_28.reshape(1, 28, 28, 1) / 255.0
+            img_limpia_array = autoencoder.predict(entrada_ae, verbose=0)
+            img_limpia_28 = img_limpia_array.reshape(28, 28)
+            
+            # Predicciones con imagen limpia
+            entrada_lr = img_limpia_28.reshape(1, -1)
+            pred_lr = modelo_lr.predict(entrada_lr)[0]
+            
+            entrada_cnn = img_limpia_28.reshape(1, 28, 28, 1)
+            pred_cnn = np.argmax(modelo_cnn.predict(entrada_cnn, verbose=0))
+            
+            entrada_rnn = img_limpia_28.reshape(1, 28, 28)
+            pred_rnn = np.argmax(modelo_rnn.predict(entrada_rnn, verbose=0))
+            
+            img_limpia_32 = cv2.resize(img_limpia_28, (32, 32), interpolation=cv2.INTER_AREA)
+            img_limpia_32_rgb = cv2.cvtColor((img_limpia_32 * 255).astype(np.uint8), cv2.COLOR_GRAY2RGB)
+            entrada_tl = (img_limpia_32_rgb.reshape(1, 32, 32, 3) / 127.5) - 1.0
+            pred_tl = np.argmax(modelo_tl.predict(entrada_tl, verbose=0))
+            
+            procesado = True
+        else:
+            st.warning("Dibuja un número primero.")
 
-# Etapa 4: Panel de Responsabilidad e Impacto
-st.markdown("---")
-st.header("Panel de Responsabilidad e Impacto")
-st.markdown("""
-El desarrollo de arquitecturas generativas, como el **Autoencoder** implementado en este proyecto para la reconstrucción y limpieza de trazos, demuestra el poderoso alcance de la Inteligencia Artificial para alterar y sintetizar información visual. Sin embargo, esta capacidad de "reconstrucción" a partir de ruido es la misma base tecnológica utilizada para la creación de **Deepfakes** y la generación de contenido hiperrealista falso.
-
-**Riesgos Éticos y de Seguridad:**
-* **Suplantación de Identidad:** Algoritmos entrenados para reconocer y replicar patrones biométricos (como firmas, rostros o huellas) pueden ser manipulados para evadir sistemas de seguridad, generando falsos positivos que vulneran la privacidad de los usuarios.
-* **Desinformación:** La facilidad con la que arquitecturas de Transfer Learning pueden acoplarse a modelos generativos permite la creación masiva de contenido sintético, dificultando la distinción entre trazos/imágenes reales y generadas por computadora.
-* **Sesgo del Dataset:** Nuestro modelo fuerza cualquier garabato a convertirse en un dígito estilizado similar a los del dataset MNIST. En aplicaciones críticas (médicas, penales), obligar a un modelo a "reconstruir" información faltante basándose en sus sesgos de entrenamiento puede llevar a invenciones peligrosas (alucinaciones) que no corresponden a la realidad.
-
-**Conclusión:**
-El despliegue de sistemas inteligentes debe ir acompañado de mecanismos de trazabilidad y validación. Como ingenieros, es nuestra responsabilidad garantizar que los modelos generativos se utilicen para asistir y corregir errores, manteniendo siempre la transparencia sobre cuándo y cómo los datos originales han sido alterados.
-""")
+with col_izq:
+    # Textos principales
+    st.markdown('<div class="custom-title">PROYECTO INTEGRADOR:<br>CICLO DE VIDA DE IA<br>(ETAPAS 1-4)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="custom-subtitle">DIBUJA UN NÚMERO. UN MODELO GENERATIVO LIMPIARÁ TU TRAZO Y 4 ARQUITECTURAS DISTINTAS INTENTARÁN PREDECIRLO.</div>', unsafe_allow_html=True)
+    
+    # Sub-columnas para las imágenes de los trazos
+    col_img1, col_img2 = st.columns(2)
+    with col_img1:
+        st.markdown('<div class="polaroid-box">', unsafe_allow_html=True)
+        if procesado and img_28 is not None:
+            # Mostrar invertido de nuevo para que coincida con la estética en pantalla
+            st.image(cv2.bitwise_not(img_28), width=150)
+        else:
+            st.image(np.ones((150, 150, 3)) * 255, width=150) # Cuadro en blanco por defecto
+        st.markdown('TRAZO ORIGINAL</div>', unsafe_allow_html=True)
+        
+    with col_img2:
+        st.markdown('<div class="polaroid-box">', unsafe_allow_html=True)
+        if procesado and img_limpia_28 is not None:
+            st.image(cv2.bitwise_not((img_limpia_28 * 255).astype(np.uint8)), width=150)
+        else:
+            st.image(np.ones((150, 150, 3)) * 255, width=150)
+        st.markdown('TRAZO LIMPIO</div>', unsafe_allow_html=True)
+        
+    st.write("") # Espaciador
+    
+    # Sub-columnas para los 4 resultados
+    col_res1, col_res2, col_res3 = st.columns(3)
+    with col_res1:
+        st.markdown(f'<div class="polaroid-box">CLÁSICO (LR):<br><b>{pred_lr}</b></div>', unsafe_allow_html=True)
+    with col_res2:
+        st.markdown(f'<div class="polaroid-box">RED CNN:<br><b>{pred_cnn}</b></div>', unsafe_allow_html=True)
+    with col_res3:
+        st.markdown(f'<div class="polaroid-box">RED RNN:<br><b>{pred_rnn}</b></div>', unsafe_allow_html=True)
+        
+    col_res_empty, col_res4, col_res_empty2 = st.columns([1, 1, 1])
+    with col_res4:
+        st.markdown(f'<div class="polaroid-box">MOBILENETV2:<br><b>{pred_tl}</b></div>', unsafe_allow_html=True)
