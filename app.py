@@ -1,25 +1,22 @@
-import streamlit as st
+2import streamlit as st
 import numpy as np
 import cv2
 import joblib
 from tensorflow.keras.models import load_model
 from streamlit_drawable_canvas import st_canvas
 
-# 1. Configuración de página ancha para soportar el diseño de dos columnas
+# 1. Configuración de página
 st.set_page_config(page_title="Proyecto Integrador IA", layout="wide")
 
-# 2. Inyección masiva de CSS para lograr la estética de la imagen
+# 2. Inyección de CSS para la estética Sage Green y tipografías
 st.markdown("""
     <style>
-    /* Importar fuentes elegantes de Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&family=Marcellus&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;700&family=Marcellus&display=swap');
     
-    /* Fondo general color sage green */
     .stApp {
         background-color: #cbd3c5;
     }
     
-    /* Tipografía del título */
     .custom-title {
         font-family: 'Marcellus', serif;
         font-size: 3rem;
@@ -29,7 +26,6 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Tipografía del subtítulo */
     .custom-subtitle {
         font-family: 'Josefin Sans', sans-serif;
         font-size: 1rem;
@@ -39,7 +35,6 @@ st.markdown("""
         margin-bottom: 40px;
     }
     
-    /* Cajas tipo Polaroid para las imágenes y resultados */
     .polaroid-box {
         background-color: #f4efea;
         padding: 15px;
@@ -51,32 +46,53 @@ st.markdown("""
         box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
     }
     
-    /* Contenedor del canvas para que combine con el fondo crema */
-    .canvas-container {
-        background-color: #f4efea;
-        padding: 20px;
-        border: 1px solid #4a443b;
-        box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
+    /* Estilo del botón Procesar centrado y en negritas */
+    div.stButton {
         display: flex;
         justify-content: center;
+        margin-top: 15px;
     }
-    
-    /* Estilo del botón Procesar */
     div.stButton > button:first-child {
         background-color: transparent !important;
         color: #4a443b !important;
         border: 1px solid #4a443b !important;
         border-radius: 0px !important;
         font-family: 'Josefin Sans', sans-serif !important;
+        font-weight: bold !important;
         letter-spacing: 2px !important;
         padding: 10px 30px !important;
-        width: 100% !important;
-        margin-top: 15px;
+        width: 80% !important;
         transition: all 0.3s;
     }
     div.stButton > button:first-child:hover {
         background-color: #4a443b !important;
         color: #f4efea !important;
+    }
+    
+    /* Estilos para el panel de impacto */
+    .impact-panel {
+        background-color: #f4efea;
+        padding: 35px;
+        border: 1px solid #4a443b;
+        font-family: 'Josefin Sans', sans-serif;
+        color: #4a443b;
+        margin-top: 50px;
+        margin-bottom: 30px;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.05);
+        line-height: 1.6;
+    }
+    .impact-panel h2 {
+        font-family: 'Marcellus', serif;
+        color: #4a443b;
+        margin-top: 0;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .impact-panel strong {
+        color: #2c2923;
+    }
+    .impact-panel ul {
+        margin-bottom: 20px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -103,31 +119,24 @@ img_limpia_28 = None
 procesado = False
 
 with col_der:
-    st.markdown('<div class="canvas-container">', unsafe_allow_html=True)
-    # Canvas adaptado a los colores del diseño (fondo crema, trazo café oscuro)
+    # Lienzo de dibujo
     canvas_result = st_canvas(
         fill_color="#f4efea",
         stroke_width=25,
-        stroke_color="#4a443b", # Trazo oscuro
-        background_color="#f4efea", # Fondo claro
+        stroke_color="#4a443b",
+        background_color="#f4efea",
         width=350,
         height=350,
         drawing_mode="freedraw",
         key="canvas",
         return_image_data=True
     )
-    st.markdown('</div>', unsafe_allow_html=True)
     
     if st.button("PROCESAR Y PREDECIR"):
         if canvas_result.image_data is not None:
-            # Procesamiento visual
             imagen = canvas_result.image_data
             imagen_gris = cv2.cvtColor(imagen, cv2.COLOR_RGBA2GRAY)
-            
-            # TRUCO CRÍTICO: Invertir colores. El modelo espera fondo negro y trazo blanco.
-            # Como dibujaste en fondo crema con trazo oscuro, invertimos la matriz.
             imagen_invertida = cv2.bitwise_not(imagen_gris)
-            
             img_28 = cv2.resize(imagen_invertida, (28, 28), interpolation=cv2.INTER_AREA)
             
             # Reconstrucción (Autoencoder)
@@ -135,7 +144,7 @@ with col_der:
             img_limpia_array = autoencoder.predict(entrada_ae, verbose=0)
             img_limpia_28 = img_limpia_array.reshape(28, 28)
             
-            # Predicciones con imagen limpia
+            # Predicciones
             entrada_lr = img_limpia_28.reshape(1, -1)
             pred_lr = modelo_lr.predict(entrada_lr)[0]
             
@@ -155,11 +164,9 @@ with col_der:
             st.warning("Dibuja un número primero.")
 
 with col_izq:
-    # Textos principales
     st.markdown('<div class="custom-title">PROYECTO INTEGRADOR:<br>CICLO DE VIDA DE IA<br>(ETAPAS 1-4)</div>', unsafe_allow_html=True)
     st.markdown('<div class="custom-subtitle">DIBUJA UN NÚMERO. UN MODELO GENERATIVO LIMPIARÁ TU TRAZO Y 4 ARQUITECTURAS DISTINTAS INTENTARÁN PREDECIRLO.</div>', unsafe_allow_html=True)
     
-   # Sub-columnas para las imágenes de los trazos
     col_img1, col_img2 = st.columns(2)
     
     with col_img1:
@@ -167,26 +174,17 @@ with col_izq:
             st.image(cv2.bitwise_not(img_28), width=150)
         else:
             st.image(np.ones((150, 150, 3)), width=150)
-        st.markdown('<div style="text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; letter-spacing: 1px;">TRAZO ORIGINAL</div>', unsafe_allow_html=True)
+        st.markdown('<div style="width: 150px; text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; font-weight: bold; letter-spacing: 1px;">TRAZO ORIGINAL</div>', unsafe_allow_html=True)
         
     with col_img2:
         if procesado and img_limpia_28 is not None:
             st.image(cv2.bitwise_not((img_limpia_28 * 255).astype(np.uint8)), width=150)
         else:
             st.image(np.ones((150, 150, 3)), width=150)
-        st.markdown('<div style="text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; letter-spacing: 1px;">TRAZO LIMPIO</div>', unsafe_allow_html=True)
+        st.markdown('<div style="width: 150px; text-align: center; font-family: \'Josefin Sans\', sans-serif; color: #4a443b; margin-top: 10px; font-weight: bold; letter-spacing: 1px;">TRAZO LIMPIO</div>', unsafe_allow_html=True)
         
-    st.write("") # Espaciador
+    st.write("")
     
-    # Sub-columnas para los 4 resultados
     col_res1, col_res2, col_res3 = st.columns(3)
     with col_res1:
-        st.markdown(f'<div class="polaroid-box">CLÁSICO (LR):<br><b>{pred_lr}</b></div>', unsafe_allow_html=True)
-    with col_res2:
-        st.markdown(f'<div class="polaroid-box">RED CNN:<br><b>{pred_cnn}</b></div>', unsafe_allow_html=True)
-    with col_res3:
-        st.markdown(f'<div class="polaroid-box">RED RNN:<br><b>{pred_rnn}</b></div>', unsafe_allow_html=True)
-        
-    col_res_empty, col_res4, col_res_empty2 = st.columns([1, 1, 1])
-    with col_res4:
-        st.markdown(f'<div class="polaroid-box">MOBILENETV2:<br><b>{pred_tl}</b></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="polaroid-box">CLÁSICO (LR):<br
