@@ -175,7 +175,7 @@ with col_izq:
         if procesado and img_limpia_28 is not None:
             st.image(cv2.bitwise_not((img_limpia_28 * 255).astype(np.uint8)), width=150)
         else:
-            st.image(np.ones((150, 150, 3)) * 255, width=150)
+            st.image(np.ones((150, 150, 3)), width=150)
         st.markdown('TRAZO LIMPIO</div>', unsafe_allow_html=True)
         
     st.write("") # Espaciador
