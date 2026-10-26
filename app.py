@@ -50,7 +50,7 @@ st.markdown("""
     div.stButton {
         display: flex;
         justify-content: center;
-        margin-top: 15px;
+        margin-top: 25px;
     }
     div.stButton > button:first-child {
         background-color: transparent !important;
