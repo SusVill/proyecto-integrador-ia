@@ -196,3 +196,19 @@ with col_izq:
     col_res_empty, col_res4, col_res_empty2 = st.columns([1, 1, 1])
     with col_res4:
         st.markdown(f'<div class="polaroid-box">MOBILENETV2:<br><b>{pred_tl}</b></div>', unsafe_allow_html=True)
+
+    # 5. Panel de Impacto
+    st.markdown("""
+    <div class="impact-panel">
+        <h2>Panel de Responsabilidad e Impacto</h2>
+        <p>El desarrollo de arquitecturas generativas, como el <strong>Autoencoder</strong> implementado en este proyecto para la reconstrucción y limpieza de trazos, demuestra el poderoso alcance de la Inteligencia Artificial para alterar y sintetizar información visual. Sin embargo, esta capacidad de "reconstrucción" a partir de ruido es la misma base tecnológica utilizada para la creación de <strong>Deepfakes</strong> y la generación de contenido hiperrealista falso.</p>
+        <p><strong>Riesgos Éticos y de Seguridad:</strong></p>
+        <ul>
+         <li><strong>Suplantación de Identidad:</strong> Algoritmos entrenados para reconocer y replicar patrones biométricos (como firmas, rostros o huellas) pueden ser manipulados para evadir sistemas de seguridad, generando falsos positivos que vulneran la privacidad de los usuarios.</li>
+         <li><strong>Desinformación:</strong> La facilidad con la que arquitecturas de Transfer Learning pueden acoplarse a modelos generativos permite la creación masiva de contenido sintético, dificultando la distinción entre trazos/imágenes reales y generadas por computadora.</li>
+         <li><strong>Sesgo del Dataset:</strong> Nuestro modelo fuerza cualquier garabato a convertirse en un dígito estilizado similar a los del dataset MNIST. En aplicaciones críticas (médicas, penales), obligar a un modelo a "reconstruir" información faltante basándose en sus sesgos de entrenamiento puede llevar a invenciones peligrosas (alucinaciones) que no corresponden a la realidad.</li>
+     </ul>
+     <p><strong>Conclusión:</strong></p>
+        <p>El despliegue de sistemas inteligentes debe ir acompañado de mecanismos de trazabilidad y validación. Como ingenieros, es nuestra responsabilidad garantizar que los modelos generativos se utilicen para asistir y corregir errores, manteniendo siempre la transparencia sobre cuándo y cómo los datos originales han sido alterados.</p>
+        </div>
+            """, unsafe_allow_html=True)
