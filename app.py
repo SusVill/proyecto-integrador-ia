@@ -187,4 +187,12 @@ with col_izq:
     
     col_res1, col_res2, col_res3 = st.columns(3)
     with col_res1:
-        st.markdown(f'<div class="polaroid-box">CLÁSICO (LR):<br
+        st.markdown(f'<div class="polaroid-box">CLÁSICO (LR):<br><b>{pred_lr}</b></div>', unsafe_allow_html=True)
+    with col_res2:
+        st.markdown(f'<div class="polaroid-box">RED CNN:<br><b>{pred_cnn}</b></div>', unsafe_allow_html=True)
+    with col_res3:
+        st.markdown(f'<div class="polaroid-box">RED RNN:<br><b>{pred_rnn}</b></div>', unsafe_allow_html=True)
+        
+    col_res_empty, col_res4, col_res_empty2 = st.columns([1, 1, 1])
+    with col_res4:
+        st.markdown(f'<div class="polaroid-box">MOBILENETV2:<br><b>{pred_tl}</b></div>', unsafe_allow_html=True)
